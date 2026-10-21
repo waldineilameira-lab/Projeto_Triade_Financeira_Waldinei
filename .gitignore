@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ===== Projeto Tríade Financeira =====
+# Credenciais reais (nunca versionar)
+.streamlit/secrets.toml
+
+# Dados brutos (arquivos grandes da CVM/B3); mantém só a pasta
+data/raw/*
+!data/raw/.gitkeep
