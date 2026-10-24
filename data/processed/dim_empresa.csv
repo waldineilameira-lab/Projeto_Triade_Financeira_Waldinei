@@ -1,0 +1,10 @@
+ticker,empresa,setor,tipo,cnpj
+LREN3,Lojas Renner,Consumo/Varejo,Não financeira,92.754.738/0001-62
+ABEV3,Ambev,Consumo/Varejo,Não financeira,07.526.557/0001-00
+PETR4,Petrobras,Energia,Não financeira,33.000.167/0001-01
+EGIE3,Engie Brasil,Energia,Não financeira,02.474.103/0001-19
+VALE3,Vale,Commodities Exportadoras,Não financeira,33.592.510/0001-54
+SUZB3,Suzano,Commodities Exportadoras,Não financeira,16.404.287/0001-55
+WEGE3,WEG,Exportadoras Industriais,Não financeira,84.429.695/0001-11
+EMBR3,Embraer,Exportadoras Industriais,Não financeira,07.689.002/0001-89
+ITUB4,Itaú Unibanco,Bancos,Financeira,60.872.504/0001-23
