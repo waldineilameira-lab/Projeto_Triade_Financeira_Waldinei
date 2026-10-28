@@ -4,6 +4,7 @@ import streamlit as st
 
 from src.dados import ORIGEM_BANCO, carregar_dados
 from src.filtros import aplicar_filtros, barra_lateral
+from src.kpis import exibir_kpis
 
 st.set_page_config(page_title="Tríade Financeira", page_icon="📊", layout="wide")
 
@@ -26,6 +27,13 @@ if not filtros["empresas"]:
     st.stop()
 
 integrado = aplicar_filtros(dados["fato_anual_integrado"], filtros)
+
+
+# KPIs: último exercício do período escolhido, comparado ao exercício anterior
+anual_empresas = dados["fato_anual_integrado"]
+anual_empresas = anual_empresas[anual_empresas["ticker"].isin(filtros["empresas"])]
+st.subheader(f"Indicadores-chave — exercício de {filtros['ano_fim']}")
+exibir_kpis(dados["fato_macro_anual"], anual_empresas, filtros["ano_fim"])
 
 # Prévia temporária do recorte — será substituída pelos KPIs, gráficos e abas nos próximos cards
 st.subheader("Recorte selecionado")
