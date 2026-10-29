@@ -4,6 +4,7 @@ import streamlit as st
 
 from src.dados import ORIGEM_BANCO, carregar_dados
 from src.filtros import aplicar_filtros, barra_lateral
+from src.graficos import grafico_base100, grafico_lucro_roe, grafico_macro
 from src.kpis import exibir_kpis
 
 st.set_page_config(page_title="Tríade Financeira", page_icon="📊", layout="wide")
@@ -34,6 +35,13 @@ anual_empresas = dados["fato_anual_integrado"]
 anual_empresas = anual_empresas[anual_empresas["ticker"].isin(filtros["empresas"])]
 st.subheader(f"Indicadores-chave — exercício de {filtros['ano_fim']}")
 exibir_kpis(dados["fato_macro_anual"], anual_empresas, filtros["ano_fim"])
+
+
+# Gráficos 1 a 3 — serão organizados em abas no card 16
+st.plotly_chart(grafico_macro(dados["fato_macro_mensal"], filtros["ano_inicio"], filtros["ano_fim"]))
+st.plotly_chart(grafico_base100(dados["fato_cotacoes"], dados["dim_empresa"], filtros["empresas"],
+                                filtros["ano_inicio"], filtros["ano_fim"]))
+st.plotly_chart(grafico_lucro_roe(dados["fato_anual_integrado"], filtros["empresas"], filtros["ano_fim"]))
 
 # Prévia temporária do recorte — será substituída pelos KPIs, gráficos e abas nos próximos cards
 st.subheader("Recorte selecionado")
