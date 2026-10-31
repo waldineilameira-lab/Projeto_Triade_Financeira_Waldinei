@@ -12,6 +12,7 @@ from src.graficos import (
     grafico_setor_selic,
 )
 from src.kpis import exibir_kpis
+from src.narrativa import HISTORIAS, piramide
 
 st.set_page_config(page_title="Tríade Financeira", page_icon="📊", layout="wide")
 
@@ -33,30 +34,72 @@ if not filtros["empresas"]:
     st.warning("Nenhuma empresa selecionada. Escolha ao menos um setor e uma empresa na barra lateral.")
     st.stop()
 
-integrado = aplicar_filtros(dados["fato_anual_integrado"], filtros)
-
+empresas, ano_ini, ano_fim = filtros["empresas"], filtros["ano_inicio"], filtros["ano_fim"]
+anual = dados["fato_anual_integrado"]
+integrado = aplicar_filtros(anual, filtros)
 
 # KPIs: último exercício do período escolhido, comparado ao exercício anterior
-anual_empresas = dados["fato_anual_integrado"]
-anual_empresas = anual_empresas[anual_empresas["ticker"].isin(filtros["empresas"])]
-st.subheader(f"Indicadores-chave — exercício de {filtros['ano_fim']}")
-exibir_kpis(dados["fato_macro_anual"], anual_empresas, filtros["ano_fim"])
+st.subheader(f"Indicadores-chave — exercício de {ano_fim}")
+exibir_kpis(dados["fato_macro_anual"], anual[anual["ticker"].isin(empresas)], ano_fim)
 
+aba_macro, aba_balancos, aba_setores, aba_resiliencia, aba_dados = st.tabs([
+    "Cenário macroeconômico",
+    "P1 · Juros e balanços",
+    "P2 · Setores × Selic",
+    "P3/P4 · Câmbio e resiliência",
+    "Dados e download",
+])
 
-# Gráficos 1 a 3 — serão organizados em abas no card 16
-st.plotly_chart(grafico_macro(dados["fato_macro_mensal"], filtros["ano_inicio"], filtros["ano_fim"]))
-st.plotly_chart(grafico_base100(dados["fato_cotacoes"], dados["dim_empresa"], filtros["empresas"],
-                                filtros["ano_inicio"], filtros["ano_fim"]))
-st.plotly_chart(grafico_lucro_roe(dados["fato_anual_integrado"], filtros["empresas"], filtros["ano_fim"]))
-st.plotly_chart(grafico_setor_selic(dados["fato_anual_integrado"], filtros["empresas"],
-                                    filtros["ano_inicio"], filtros["ano_fim"]))
-st.plotly_chart(grafico_ebit_retorno(dados["fato_anual_integrado"], filtros["empresas"],
-                                     filtros["ano_inicio"], filtros["ano_fim"]))
+with aba_macro:
+    st.plotly_chart(grafico_macro(dados["fato_macro_mensal"], ano_ini, ano_fim))
+    piramide(**HISTORIAS["macro"])
 
-# Prévia temporária do recorte — será substituída pelos KPIs, gráficos e abas nos próximos cards
-st.subheader("Recorte selecionado")
-st.write(f"{len(filtros['empresas'])} empresa(s) · exercícios de "
-         f"{filtros['ano_inicio']} a {filtros['ano_fim']} · {len(integrado)} registros")
-st.dataframe(integrado[["ticker", "empresa", "setor", "ano", "receita_liquida",
-                        "lucro_liquido", "roe", "retorno_anual", "selic_media_pct"]],
-             hide_index=True)
+with aba_balancos:
+    st.plotly_chart(grafico_lucro_roe(anual, empresas, ano_fim))
+    piramide(**HISTORIAS["balancos"])
+
+with aba_setores:
+    st.plotly_chart(grafico_setor_selic(anual, empresas, ano_ini, ano_fim))
+    st.plotly_chart(grafico_base100(dados["fato_cotacoes"], dados["dim_empresa"], empresas, ano_ini, ano_fim))
+    piramide(**HISTORIAS["setores"])
+
+with aba_resiliencia:
+    st.plotly_chart(grafico_ebit_retorno(anual, empresas, ano_ini, ano_fim))
+    st.caption("O Itaú não aparece neste gráfico: instituições financeiras não apresentam margem EBIT.")
+    piramide(**HISTORIAS["resiliencia"])
+
+with aba_dados:
+    st.markdown(f"**Recorte atual:** {len(empresas)} empresa(s) · exercícios de {ano_ini} a {ano_fim} "
+                f"· {len(integrado)} registros")
+    tabela = integrado[["ticker", "empresa", "setor", "ano", "receita_liquida", "lucro_liquido",
+                        "margem_ebit", "roe", "retorno_anual", "selic_media_pct", "ipca_ano_pct"]]
+    st.dataframe(
+        tabela, hide_index=True,
+        column_config={
+            "ticker": "Ticker", "empresa": "Empresa", "setor": "Setor",
+            "ano": st.column_config.NumberColumn("Ano", format="%d"),
+            "receita_liquida": st.column_config.NumberColumn("Receita líquida (R$)", format="localized"),
+            "lucro_liquido": st.column_config.NumberColumn("Lucro líquido (R$)", format="localized"),
+            "margem_ebit": st.column_config.NumberColumn("Margem EBIT", format="percent"),
+            "roe": st.column_config.NumberColumn("ROE", format="percent"),
+            "retorno_anual": st.column_config.NumberColumn("Retorno da ação", format="percent"),
+            "selic_media_pct": st.column_config.NumberColumn("Selic média (%)", format="%.2f"),
+            "ipca_ano_pct": st.column_config.NumberColumn("IPCA do ano (%)", format="%.2f"),
+        },
+    )
+    st.download_button(
+        "Baixar recorte em CSV",
+        data=integrado.to_csv(index=False, sep=";", decimal=",").encode("utf-8-sig"),
+        file_name=f"triade_{ano_ini}_{ano_fim}.csv", mime="text/csv", type="primary",
+        help="Separador ';' e vírgula decimal: abre direto no Excel em português.",
+    )
+    st.markdown("**Limitações da análise**")
+    st.markdown(
+        "- Associação estatística não implica causalidade.\n"
+        "- Uma a duas empresas por setor: as conclusões valem para estas companhias, não para o setor.\n"
+        "- Médias simples entre empresas; ROE sobre o PL do fim do exercício.\n"
+        "- Itaú: margens, liquidez e dívida líquida não aplicáveis (instituição financeira).\n"
+        "- Retorno de 2019 com base no 1º pregão do ano; retorno do ITUB4 em 2021 pode estar "
+        "subestimado pela cisão da XP Inc.\n"
+        "- Embraer: código histórico EMBR3 (atual EMBJ3)."
+    )
