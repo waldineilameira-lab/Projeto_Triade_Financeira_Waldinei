@@ -4,7 +4,13 @@ import streamlit as st
 
 from src.dados import ORIGEM_BANCO, carregar_dados
 from src.filtros import aplicar_filtros, barra_lateral
-from src.graficos import grafico_base100, grafico_lucro_roe, grafico_macro
+from src.graficos import (
+    grafico_base100,
+    grafico_ebit_retorno,
+    grafico_lucro_roe,
+    grafico_macro,
+    grafico_setor_selic,
+)
 from src.kpis import exibir_kpis
 
 st.set_page_config(page_title="Tríade Financeira", page_icon="📊", layout="wide")
@@ -42,6 +48,10 @@ st.plotly_chart(grafico_macro(dados["fato_macro_mensal"], filtros["ano_inicio"],
 st.plotly_chart(grafico_base100(dados["fato_cotacoes"], dados["dim_empresa"], filtros["empresas"],
                                 filtros["ano_inicio"], filtros["ano_fim"]))
 st.plotly_chart(grafico_lucro_roe(dados["fato_anual_integrado"], filtros["empresas"], filtros["ano_fim"]))
+st.plotly_chart(grafico_setor_selic(dados["fato_anual_integrado"], filtros["empresas"],
+                                    filtros["ano_inicio"], filtros["ano_fim"]))
+st.plotly_chart(grafico_ebit_retorno(dados["fato_anual_integrado"], filtros["empresas"],
+                                     filtros["ano_inicio"], filtros["ano_fim"]))
 
 # Prévia temporária do recorte — será substituída pelos KPIs, gráficos e abas nos próximos cards
 st.subheader("Recorte selecionado")
