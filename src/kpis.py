@@ -37,8 +37,12 @@ def calcular_kpis(macro_anual: pd.DataFrame, anual: pd.DataFrame, ano: int) -> d
         "ipca": _valor_do_ano(macro_anual, ano, "ipca_12m_dez_pct"),
         "ipca_ant": _valor_do_ano(macro_anual, anterior, "ipca_12m_dez_pct"),
         "tem_receita": not nao_financeiras.empty,
-        "receita": nao_financeiras.loc[nao_financeiras["ano"] == ano, "receita_liquida"].sum(),
-        "receita_ant": nao_financeiras.loc[nao_financeiras["ano"] == anterior, "receita_liquida"].sum(),
+        "receita": nao_financeiras.loc[
+            nao_financeiras["ano"] == ano, "receita_liquida"
+        ].sum(),
+        "receita_ant": nao_financeiras.loc[
+            nao_financeiras["ano"] == anterior, "receita_liquida"
+        ].sum(),
         "lucro": anual.loc[anual["ano"] == ano, "lucro_liquido"].sum(),
         "lucro_ant": anual.loc[anual["ano"] == anterior, "lucro_liquido"].sum(),
     }
@@ -62,20 +66,40 @@ def exibir_kpis(macro_anual: pd.DataFrame, anual: pd.DataFrame, ano: int) -> Non
         d_lucro = f"{_sinal(dif)}R$ {br(abs(dif))} bi {ref}"
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric(f"Selic Meta — fim de {ano}", f"{br(k['selic'], 2)}% a.a.", d_selic, delta_color="off", border=True,
-              help="Meta da taxa Selic definida pelo Copom, vigente em 31/12 (BACEN, série 432).")
-    c2.metric(f"IPCA 12 meses — dez/{ano}", f"{br(k['ipca'], 2)}%", d_ipca, delta_color="inverse",
-              border=True,
-              help="Inflação oficial acumulada em 12 meses (BACEN, série 13522). "
-                   "Alta da inflação aparece em vermelho.")
-    c3.metric(f"Receita da carteira — {ano}",
-              f"R$ {br(k['receita'] / 1e9)} bi" if k["tem_receita"] else "N/A",
-              d_receita, border=True,
-              help="Soma da receita líquida das empresas não financeiras selecionadas (CVM). "
-                   "O Itaú não entra na soma: sua receita de intermediação financeira não é comparável.")
-    c4.metric(f"Lucro líquido da carteira — {ano}", f"R$ {br(k['lucro'] / 1e9)} bi", d_lucro,
-              border=True,
-              help="Soma do lucro líquido consolidado das empresas selecionadas (CVM).")
+    c1.metric(
+        f"Selic Meta — fim de {ano}",
+        f"{br(k['selic'], 2)}% a.a.",
+        d_selic,
+        delta_color="off",
+        border=True,
+        help="Meta da taxa Selic definida pelo Copom, vigente em 31/12 (BACEN, série 432).",
+    )
+    c2.metric(
+        f"IPCA 12 meses — dez/{ano}",
+        f"{br(k['ipca'], 2)}%",
+        d_ipca,
+        delta_color="inverse",
+        border=True,
+        help="Inflação oficial acumulada em 12 meses (BACEN, série 13522). "
+        "Alta da inflação aparece em vermelho.",
+    )
+    c3.metric(
+        f"Receita da carteira — {ano}",
+        f"R$ {br(k['receita'] / 1e9)} bi" if k["tem_receita"] else "N/A",
+        d_receita,
+        border=True,
+        help="Soma da receita líquida das empresas não financeiras selecionadas (CVM). "
+        "O Itaú não entra na soma: sua receita de intermediação financeira não é comparável.",
+    )
+    c4.metric(
+        f"Lucro da carteira — {ano}",
+        f"R$ {br(k['lucro'] / 1e9)} bi",
+        d_lucro,
+        border=True,
+        help="Soma do lucro líquido consolidado das empresas selecionadas (CVM).",
+    )
 
     if not k["tem_anterior"]:
-        st.caption("Sem variação para 2019: o exercício de 2018 está fora do período analisado.")
+        st.caption(
+            "Sem variação para 2019: o exercício de 2018 está fora do período analisado."
+        )
