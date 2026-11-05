@@ -1,0 +1,31 @@
+# Mantém o projeto Supabase "projeto-triade" ativo durante a avaliação.
+# O plano gratuito pausa projetos com mais de 7 dias sem atividade;
+# este workflow faz uma consulta ao banco a cada 3 dias.
+#
+# Onde colocar: .github/workflows/keep-supabase-alive.yml
+# Secret necessário: SUPABASE_DB_URL (connection string do Session pooler)
+
+name: Manter Supabase ativo
+
+on:
+  schedule:
+    - cron: "0 12 */3 * *"   # a cada 3 dias, às 12h UTC (9h em Brasília)
+  workflow_dispatch:          # permite rodar manualmente pela aba Actions
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar cliente PostgreSQL
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Consultar o banco
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "Secret SUPABASE_DB_URL não configurado."
+            exit 1
+          fi
+          psql "$SUPABASE_DB_URL" -c "select now() as ping, current_database();"
+          echo "Supabase respondeu: projeto ativo."
